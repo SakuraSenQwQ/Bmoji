@@ -2,6 +2,8 @@
 
 一款B站表情包浏览器，让你可以打包下载BiliBili表情~
 
+[表情包信息列表](https://github.com/SakuraSenQwQ/Bmoji/blob/main/back/download.json)
+
 # 使用说明
 
 访问网页[bmoji.sakurasen.cn](https://bmoji.sakurasen.cn/)
