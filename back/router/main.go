@@ -7,6 +7,7 @@ import (
 )
 
 func StartUp() {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	v1 := r.Group("v1")
 	v1.Use(func(c *gin.Context) {
@@ -21,6 +22,7 @@ func StartUp() {
 	})
 	e := v1.Group("emote")
 	Router_Emote(e)
+
 	r.Run(":1270")
 }
 func CheckCors(url string) string {
