@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 type infoobj = {
   "id": number,
   "text": string,
@@ -19,12 +19,14 @@ type infoobj = {
 const id = window.location.search.split("?")[1]
 const info = ref<infoobj>()
 const baseurl = "https://a.sakurasen.cn/bmoji/v1/emote/"
-fetch(baseurl + "info?id=" + id).then((d) => d.json()).then((d) => {
-  info.value = d
-  info.value!.emote.map((e) => {
-    if (e["gif_url"] !== "") {
-      hasgif.value = true
-    }
+onMounted(() => {
+  fetch(baseurl + "info?id=" + id).then((d) => d.json()).then((d) => {
+    info.value = d
+    info.value!.emote.map((e) => {
+      if (e["gif_url"] !== "") {
+        hasgif.value = true
+      }
+    })
   })
 })
 const view = ref({
@@ -39,7 +41,11 @@ function Info(num: number) {
   view.value.name = a?.text ?? ''
   view.value.ot = a?.meta.alias ?? ''
   view.value.type = a?.type ?? -1
-  view.value.url = a?.url ?? ""
+  if (!viewgif.value || a?.gif_url == "") {
+    view.value.url = a?.url ?? ""
+  } else {
+    view.value.url = a?.gif_url ?? ""
+  }
   view.value.display = true
 }
 function copy(data: string) {
@@ -112,7 +118,7 @@ function selgif() {
   viewgif.value = !viewgif.value
 }
 const todownload = ref(false)
-function open(url:string){
+function open(url: string) {
   const link = document.createElement('a');
   link.href = url;
   link.target = '_blank';
@@ -132,10 +138,10 @@ function open(url:string){
     <p v-if="info.emote[0].type === 4">有颜文字，故无法提供更多功能</p>
     <div class="meta">
       <div class="box" v-for="(v, i) in info.emote" :key="v.text">
-        <img v-if="v.type !== 4 && ((viewgif && v.gif_url == '') || !viewgif || v.type==4)" @click="Info(i)" referrerpolicy="no-referrer"
-          :src="v.url" :alt="v.meta.alias">
-        <img v-if="v.type !== 4 && ((viewgif && v.gif_url !== '') || v.type==4)" @click="Info(i)" referrerpolicy="no-referrer"
-          :src="v.gif_url" :alt="v.meta.alias">
+        <img v-if="v.type !== 4 && ((viewgif && v.gif_url == '') || !viewgif || v.type == 4)" @click="Info(i)"
+          referrerpolicy="no-referrer" :src="v.url" :alt="v.meta.alias">
+        <img v-if="v.type !== 4 && ((viewgif && v.gif_url !== '') || v.type == 4)" @click="Info(i)"
+          referrerpolicy="no-referrer" :src="v.gif_url" :alt="v.meta.alias">
         <span v-if="v.type === 4">{{ v.text }}</span>
       </div>
     </div>
@@ -147,7 +153,7 @@ function open(url:string){
         <span>{{ view.ot }}</span>
         <p>Url链接</p>
         <div class="copy" @click="copy(view.url)"><img src="/img/copy.svg" alt=""><span :title="view.url">{{ view.url
-        }}</span></div>
+            }}</span></div>
         <p>MarkDown</p>
         <div class="copy" @click="copy(view.name + '(' + view.url + ')')"><img src="/img/copy.svg" alt=""><span
             :title="view.name + '(' + view.url + ')'">{{ view.name + "(" + view.url + ")" }}</span></div>
@@ -230,7 +236,8 @@ function open(url:string){
   margin: 0;
   width: 100dvw;
   height: 100dvh;
-  img{
+
+  img {
     width: 13rem;
   }
 }

@@ -108,7 +108,7 @@ const imglist = ["https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/em
     <div class="contents">
       <div class="disp" id="disp">
         <div class="box" v-for="v in display" :key="v.id" @click="open(v.id)">
-          <img referrerpolicy="no-referrer" loading="lazy" :src="imglist[v.UrlType] + v.url" :alt="v.text">
+          <img referrerpolicy="no-referrer" loading="lazy" :src="(imglist[v.UrlType] ?? '') + v.url" :alt="v.text">
           <div class="info">
             <p :title="v.text">{{ v.text }}</p>
           </div>
