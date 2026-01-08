@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"main/config"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +23,7 @@ func StartUp() {
 	})
 	e := v1.Group("emote")
 	Router_Emote(e)
-
+	fmt.Println("已启动")
 	r.Run(":1270")
 }
 func CheckCors(url string) string {

@@ -48,8 +48,8 @@ func DownloadEmoteMeta() {
 	for i := range lent {
 		s := i * 50
 		o := (i + 1) * 50
-		if i == lent-1 {
-			ids = append(ids, idlist[o:])
+		if i+1 == lent {
+			ids = append(ids, idlist[s:])
 		} else {
 			ids = append(ids, idlist[s:o])
 		}
@@ -97,8 +97,7 @@ func DownloadEmoteMeta() {
 		download = append(download, metalist.Data.Package...)
 
 		//显示进度，如果太快害怕被封可以自己加sleep
-		fmt.Println(i, len(ids))
-
+		fmt.Println(i+1, len(ids))
 	}
 	file, err = json.Marshal(download)
 	if err != nil {

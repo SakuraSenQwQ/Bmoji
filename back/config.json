@@ -1,6 +1,6 @@
 {
     "app": {
-        "cors": ["localhost","http://localhost:5173","http://192.168.1.153:5173"],
+        "cors": ["http://localhost:5173"],
         "savetype": "local"
     },
     "bilibili": {
