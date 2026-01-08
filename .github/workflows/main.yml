@@ -13,14 +13,14 @@ jobs:
       matrix:
         include:
           # Windows
-          - {goos: windows, goarch: amd64, binary_name: myapp-windows-amd64.exe}
-          - {goos: windows, goarch: arm64, binary_name: myapp-windows-arm64.exe}
+          - {goos: windows, goarch: amd64, binary_name: bmoji-windows-amd64.exe}
+          - {goos: windows, goarch: arm64, binary_name: bmoji-windows-arm64.exe}
           # Linux
-          - {goos: linux, goarch: amd64, binary_name: myapp-linux-amd64}
-          - {goos: linux, goarch: arm64, binary_name: myapp-linux-arm64}
+          - {goos: linux, goarch: amd64, binary_name: bmoji-linux-amd64}
+          - {goos: linux, goarch: arm64, binary_name: bmoji-linux-arm64}
           # macOS
-          - {goos: darwin, goarch: amd64, binary_name: myapp-darwin-amd64}
-          - {goos: darwin, goarch: arm64, binary_name: myapp-darwin-arm64}
+          - {goos: darwin, goarch: amd64, binary_name: bmoji-darwin-amd64}
+          - {goos: darwin, goarch: arm64, binary_name: bmoji-darwin-arm64}
 
     steps:
       - name: Checkout code
