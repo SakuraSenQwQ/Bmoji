@@ -94,6 +94,12 @@ func DownloadEmoteMeta() {
 			panic(err)
 		}
 		json.Unmarshal(data, &metalist)
+		for _, val := range metalist.Data.Package {
+			for _, vals := range val.Emotes {
+				vals.Url = strings.Replace(vals.Url, "http://", "https://", 1)
+				vals.GifUrl = strings.Replace(vals.Url, "http://", "https://", 1)
+			}
+		}
 		download = append(download, metalist.Data.Package...)
 
 		//显示进度，如果太快害怕被封可以自己加sleep
