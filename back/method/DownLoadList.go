@@ -54,7 +54,7 @@ func DownloadEmoteList() {
 func geturl(url string) (string, int) {
 
 	//神人BiliBili,有四个域名作为图片域名，甚至还有一个是自定义域名
-	urls := []string{"http://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/garb/", "http://i0.hdslb.com/bfs/garb/"}
+	urls := []string{"https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/garb/", "https://i0.hdslb.com/bfs/garb/"}
 	for i, v := range urls {
 		arr := strings.Split(url, v)
 		if len(arr) > 1 {

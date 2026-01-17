@@ -76,7 +76,7 @@ function Start() {
   })
 }
 function open(id: number) {
-  window.open("http://" + window.location.host + "/info?" + id)
+  window.open("https://" + window.location.host + "/info?" + id)
 }
 function rd() {
   const a = rawlist.value

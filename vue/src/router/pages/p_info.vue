@@ -18,7 +18,7 @@ type infoobj = {
 }
 const id = window.location.search.split("?")[1]
 const info = ref<infoobj>()
-const baseurl = "https://a.sakurasen.cn/bmoji/v1/emote/"
+const baseurl = "https://b.sakurasen.cn/api/bmoji/v1/emote/"
 onMounted(() => {
   fetch(baseurl + "info?id=" + id).then((d) => d.json()).then((d) => {
     info.value = d
