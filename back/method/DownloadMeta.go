@@ -97,7 +97,7 @@ func DownloadEmoteMeta() {
 		for _, val := range metalist.Data.Package {
 			for _, vals := range val.Emotes {
 				vals.Url = strings.Replace(vals.Url, "http://", "https://", 1)
-				vals.GifUrl = strings.Replace(vals.Url, "http://", "https://", 1)
+				vals.GifUrl = strings.Replace(vals.GifUrl, "http://", "https://", 1)
 			}
 		}
 		download = append(download, metalist.Data.Package...)
