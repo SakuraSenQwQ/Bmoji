@@ -114,6 +114,7 @@
           "name":"",
           "type":"",
           "prefix":"bmoji_",
+          "icon":"",
           "items":([] as string[])
         }
         await Promise.all(info.value!.emote.map(async (e) => {
@@ -133,6 +134,7 @@
           json.type = type ?? "png"
           json.items.push(e.text)
         }))
+        json.icon = json.items[0] ?? ""
         json.name = info.value?.text ?? ""
         const blob4 = new Blob([JSON.stringify(json)],{type : "applocation/json"})
         zip.file("info.json",blob4)
