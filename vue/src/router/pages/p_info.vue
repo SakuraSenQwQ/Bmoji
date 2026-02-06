@@ -130,8 +130,10 @@
           const blob = await resp.blob()
           const type = resp.headers.get("content-type")!.split("/")[1]
           zip.file(json.prefix + e.text + "." + type, blob)
+          json.type = type ?? "png"
           json.items.push(e.text)
         }))
+        json.name = info.value?.text ?? ""
         const blob4 = new Blob([JSON.stringify(json)],{type : "applocation/json"})
         zip.file("info.json",blob4)
         const content3 = await zip.generateAsync({ type: "blob" })
