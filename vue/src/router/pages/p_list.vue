@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { usePackageList } from '@/composables/usePackageList'
 import { getImageUrl } from '@/types'
 import PackageOverlay from '@/components/PackageOverlay.vue'
+
+const route = useRoute()
+const router = useRouter()
 
 const {
   display,
@@ -19,17 +23,59 @@ const {
 
 const selectedPackageId = ref<number | null>(null)
 
+function parseId(val: unknown): number | null {
+  const s = Array.isArray(val) ? val[0] : val
+  if (typeof s !== 'string') return null
+  const n = Number(s)
+  return Number.isInteger(n) && n > 0 ? n : null
+}
+
 function openDetail(id: number) {
   selectedPackageId.value = id
+  // 同步 ?id=xxx 到 URL，便于分享/收藏链接
+  router.replace({ query: { ...route.query, id: String(id) } })
 }
 
 function closeOverlay() {
   selectedPackageId.value = null
+  const query = { ...route.query }
+  delete query.id
+  router.replace({ query })
 }
 
-watch(search, () => {
+// URL ?id=xxx → 打开对应表情包详情（进入页面 / 刷新 / 前进后退时自动恢复）
+watch(
+  () => route.query.id,
+  (val) => {
+    selectedPackageId.value = parseId(val)
+  },
+  { immediate: true },
+)
+
+// 搜索框输入 → 更新列表并同步 ?search= 到 URL
+watch(search, (val) => {
   doSearch()
+  const q = val.trim()
+  const query = { ...route.query }
+  if (q) {
+    query.search = q
+  } else {
+    delete query.search
+  }
+  router.replace({ query })
 })
+
+// URL ?search=xxx → 恢复搜索框（来自外部链接 / 前进后退）
+watch(
+  () => route.query.search,
+  (val) => {
+    const q = typeof val === 'string' ? val : ''
+    if (search.value !== q) {
+      search.value = q
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -97,6 +143,7 @@ watch(search, () => {
 
   <PackageOverlay
     v-if="selectedPackageId"
+    :key="selectedPackageId"
     :id="selectedPackageId"
     @close="closeOverlay"
   />

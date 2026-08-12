@@ -44,7 +44,12 @@ export function usePackageList() {
     try {
       const res = await fetchPackageList()
       rawList.value = res.data.all_packages
-      initialFill()
+      // 列表加载完成后，若已有搜索词（如来自 URL ?search=），则应用搜索
+      if (search.value.trim() !== '') {
+        doSearch()
+      } else {
+        initialFill()
+      }
     } catch (e) {
       error.value = e instanceof Error ? e.message : '加载失败'
     } finally {
