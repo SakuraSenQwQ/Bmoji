@@ -10,8 +10,8 @@ import (
 func StartUp() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	v1 := r.Group("v1")
-	v1.Use(func(c *gin.Context) {
+	r.Use(func(c *gin.Context) {
+		fmt.Println(c.GetHeader("origin"))
 		c.Writer.Header().Set("Access-Control-Allow-Origin", CheckCors(c.GetHeader("origin")))
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type,AccessToken,X-CSRF-Token, Authorization, Token")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
@@ -21,6 +21,8 @@ func StartUp() {
 		}
 		c.Next()
 	})
+	v1 := r.Group("v1")
+
 	e := v1.Group("emote")
 	Router_Emote(e)
 	fmt.Println("已启动")

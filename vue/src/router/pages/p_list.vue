@@ -1,252 +1,318 @@
-<script lang="ts" setup>
-import { onMounted, ref, watch, type PropType } from 'vue';
-const display = ref<Listobj[]>([])
-type Listobj = {
-  "id": number,
-  "text": string,
-  "type": number,
-  "url": string,
-  "UrlType": number
-}
-const prop = defineProps({
-  list: {
-    type: Array as PropType<Listobj[]>,
-    required: true,
-  }
-})
-const rawlist = ref<Listobj[]>(prop.list)
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { usePackageList } from '@/composables/usePackageList'
+import { getImageUrl } from '@/types'
+import PackageOverlay from '@/components/PackageOverlay.vue'
 
-const search = ref({
-  input: ""
-})
-let dispNum = 1
+const {
+  display,
+  search,
+  loading,
+  error,
+  isSearching,
+  displayedCount,
+  totalCount,
+  doSearch,
+  shuffle,
+  reload,
+} = usePackageList()
 
-function Push(num: number) {
-  console.log("Push")
-  for (let i = 0; i < num; i++) {
-    dispNum++
-    display.value.push(rawlist.value[dispNum - 1]!)
-  }
-}
-watch(rawlist.value, () => {
-  if (rawlist.value.length !== 0) {
-    Start()
-  }
-})
-onMounted(() => {
-  Start()
-})
-function update() {
-  if (searchis.value) {
-    return
-  }
-  const dipC = document.getElementById("disp")!.clientHeight
-  const contentC = document.getElementsByClassName("contents")[0]!.clientHeight
-  const contentS = document.getElementsByClassName("contents")[0]!.scrollTop
-  if (contentS + contentC >= dipC - 100) {
-    Push(20)
-  }
-}
-const searchis = ref(false)
-watch(search.value, () => {
-  display.value = []
-  if (search.value.input !== "") {
-    searchis.value = true
-    const rx = RegExp(search.value.input)
-    for (let i = 0; i < rawlist.value.length; i++) {
-      if (rx.test(rawlist.value[i]!.text)) {
-        display.value.push(rawlist.value[i]!)
-      }
-    }
-  } else {
-    dispNum = 0
-    searchis.value = false
-    Push(100)
-  }
-})
-function Start() {
-  setTimeout(() => {
-    if (rawlist.value.length <= 0) {
-      return
-    }
-    Push(100)
-  }, 0);
-  document.getElementsByClassName("contents")[0]!.addEventListener('scroll', () => {
-    update()
-  })
-}
-function open(id: number) {
-  window.open("https://" + window.location.host + "/info?" + id)
-}
-function rd() {
-  const a = rawlist.value
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+const selectedPackageId = ref<number | null>(null)
 
-    [a[i], a[j]] = [a[j]!, a[i]!];
-  }
-  dispNum = 0
-  display.value = []
+function openDetail(id: number) {
+  selectedPackageId.value = id
 }
 
-const imglist = ["https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/emote/", "https://i0.hdslb.com/bfs/garb/", "https://i0.hdslb.com/bfs/garb/"]
+function closeOverlay() {
+  selectedPackageId.value = null
+}
+
+watch(search, () => {
+  doSearch()
+})
 </script>
 
 <template>
-  <div class="list">
-    <div class="topbar">
-      <h1>表情包</h1>
-
-      <div class="sl">
-        <span>{{ display.length + "/" + list.length }}</span>
-        <span @click="rd">随机打乱</span>
-        <input class="search" v-model="search.input" :placeholder="'共' + list.length + '个表情，点击搜索'" type="text">
-
-      </div>
-
-    </div>
-    <div class="contents">
-      <div class="disp" id="disp">
-        <div class="box" v-for="v in display" :key="v.id" @click="open(v.id)">
-          <img referrerpolicy="no-referrer" loading="lazy" :src="(imglist[v.UrlType] ?? '') + v.url" :alt="v.text">
-          <div class="info">
-            <p :title="v.text">{{ v.text }}</p>
+  <div class="list-page">
+    <div class="list-header">
+      <div class="list-header-inner">
+        <h1 class="list-title">表情包</h1>
+        <div class="list-controls">
+          <span class="list-count">{{ displayedCount }} / {{ totalCount }}</span>
+          <button class="btn-shuffle" @click="shuffle" title="随机打乱">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8" />
+              <line x1="4" y1="20" x2="21" y2="3" />
+              <polyline points="21 16 21 21 16 21" />
+              <line x1="15" y1="15" x2="21" y2="21" />
+              <line x1="4" y1="4" x2="9" y2="9" />
+            </svg>
+          </button>
+          <div class="search-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              v-model="search"
+              class="search-input"
+              type="search"
+              placeholder="搜索表情包..."
+            />
           </div>
         </div>
       </div>
     </div>
+
+    <div class="list-contents">
+      <div class="empty-state" v-if="loading">加载中…</div>
+      <div class="empty-state error" v-else-if="error">{{ error }}</div>
+      <div class="list-disp" v-else-if="display.length > 0">
+        <div
+          class="card"
+          v-for="item in display"
+          :key="item.id"
+          @click="openDetail(item.id)"
+        >
+          <div class="card-image">
+            <img
+              :src="getImageUrl(item.UrlType, item.url)"
+              :alt="item.text"
+              referrerpolicy="no-referrer"
+              loading="lazy"
+            />
+          </div>
+          <div class="card-info">
+            <p class="card-name">{{ item.text }}</p>
+          </div>
+        </div>
+        <div class="list-sentinel"></div>
+      </div>
+      <div class="empty-state" v-else>
+        <p v-if="isSearching">没有找到匹配的表情包</p>
+        <p v-else>暂无数据</p>
+      </div>
+    </div>
   </div>
+
+  <PackageOverlay
+    v-if="selectedPackageId"
+    :id="selectedPackageId"
+    @close="closeOverlay"
+  />
 </template>
 
 <style scoped>
-* {
-  scrollbar-width: none;
-}
-
-.disp {
-  box-sizing: border-box;
-  margin-top: 1rem;
-  gap: 1rem;
-  justify-content: center;
-  justify-self: center;
-  width: fit-content;
-  display: flex;
-  flex-wrap: wrap;
-  height: fit-content;
-}
-
-.info {
-
-  align-self: flex-end;
-  margin-top: auto;
-  height: 1.8rem;
-  width: 100%;
-  display: flex;
-  background-color: #fdff92;
-  border-radius: 10px;
-  justify-content: center;
-  align-items: center;
-  padding: 0 0.4rem;
-  box-sizing: border-box;
-}
-
-.box {
-  border-radius: 12px;
-  cursor: pointer;
+.list-page {
   display: flex;
   flex-direction: column;
-  width: 8rem;
-  height: 10rem;
-  background-color: #fff;
+  height: calc(100vh - 56px);
+  padding: 24px 0;
+}
 
-  img {
+.list-header {
+  flex-shrink: 0;
+  margin-bottom: 24px;
+}
+
+.list-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.list-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list-count {
+  font-size: 14px;
+  color: #86868b;
+  font-weight: 500;
+}
+
+.btn-shuffle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid #d2d2d7;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  color: #86868b;
+  transition: all 0.2s;
+}
+
+.btn-shuffle:hover {
+  background: #f5f5f7;
+  color: #1d1d1f;
+  border-color: #1d1d1f;
+}
+
+.search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #86868b;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 220px;
+  height: 40px;
+  padding: 0 16px 0 40px;
+  font-size: 14px;
+  border: 1.5px solid #d2d2d7;
+  border-radius: 12px;
+  background: #fff;
+  outline: none;
+  transition: all 0.2s;
+  font-family: inherit;
+  color: #1d1d1f;
+}
+
+.search-input:focus {
+  border-color: #1d1d1f;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.search-input::placeholder {
+  color: #a1a1a6;
+}
+
+.list-contents {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #d2d2d7 transparent;
+}
+
+.list-disp {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+.list-sentinel {
+  grid-column: 1 / -1;
+  height: 1px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.card-image {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.card-info {
+  padding: 10px 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+  color: #86868b;
+  font-size: 15px;
+}
+
+.empty-state.error {
+  color: #ff3b30;
+}
+
+@media (max-width: 640px) {
+  .list-page {
+    padding: 16px 0;
+  }
+
+  .list-header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .list-controls {
     width: 100%;
   }
 
-  p {
-    margin: 0;
-    height: 100%;
-    text-wrap-mode: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .search-wrapper {
+    flex: 1;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .list-disp {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 12px;
+  }
+
+  .list-title {
+    font-size: 24px;
   }
 }
 
-.contents {
-  overflow-x: hidden;
-  overflow-y: scroll;
-  justify-content: center;
-  align-items: start;
-  display: flex;
-  flex-wrap: wrap;
-  width: 80%;
-  margin-top: 2rem;
-  height: 85%;
-  border-radius: 12px;
-  background-color: #afafaf;
-}
-
-.sl {
-  gap: 1rem;
-  justify-content: start;
-  align-items: center;
-  display: flex;
-
-  p {
-    padding: 0 0.5rem;
-    transition: 0.5s;
-    color: #00000073;
-    position: absolute;
-    pointer-events: none;
+@media (max-width: 400px) {
+  .list-disp {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
-}
-@media (width < 480px) {
-  .sl{
-    flex-direction: column;
-    gap: 0;
-  }
-}
-.sl:has(.search:focus-within) {
-  p {
-    transition: 0.3s;
-    opacity: 0;
-  }
-
-  .search {
-    color: #000000;
-    transition: 0.5s;
-    background-color: #ffb1ff;
-  }
-}
-
-.topbar {
-  padding: 0 1rem;
-  justify-content: space-between;
-  width: min(30rem, 90%);
-  align-items: center;
-  display: flex;
-  background-color: #88dfff;
-  border-radius: 0 0 20px 20px;
-}
-
-.search {
-  transition: 0.5s;
-  outline: none;
-  border: none;
-  padding: 0 0.5rem;
-  caret-color: transparent;
-  background-color: #2ec7ff;
-  width: 12rem;
-  height: 2rem;
-  border-radius: 12px;
-}
-
-.list {
-  flex-direction: column;
-  align-items: center;
-  width: 100dvw;
-  height: 100dvh;
-  overflow-x: hidden;
-  display: flex;
 }
 </style>
