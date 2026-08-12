@@ -25,7 +25,7 @@ function toggleGif() {
 
 function selectEmote(index: number) {
   const e = detail.value!.emote[index]
-  if (e.type === 4) return
+  if (!e || e.type === 4) return
   preview.value = {
     display: true,
     url: (viewgif.value && e.gif_url ? e.gif_url : e.url) as string,
@@ -224,7 +224,7 @@ async function downloadPackage(mode: number) {
             <div class="preview-panel download-panel" @click.stop>
               <h2 class="download-title">下载</h2>
               <div class="download-options">
-                <button class="btn btn-primary" @click="downloadPackage(1)" v-if="detail && detail.emote[0].type !== 4">下载压缩包 (静态)</button>
+                <button class="btn btn-primary" @click="downloadPackage(1)" v-if="detail && detail.emote[0] && detail.emote[0].type !== 4">下载压缩包 (静态)</button>
                 <button class="btn btn-primary" @click="downloadPackage(2)" v-if="hasGif">下载压缩包 (动图)</button>
                 <button class="btn btn-outline" @click="downloadPackage(3)">下载 JSON</button>
                 <button class="btn btn-outline" @click="downloadPackage(4)">保存为 Waline 表情包</button>
